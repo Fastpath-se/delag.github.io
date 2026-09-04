@@ -17,7 +17,14 @@
 <script>
   window.DELAG_CONFIG = {
     contactEmail: "hello@delag.com",  // ← your real inbox
-    goatcounter:  "delag"             // ← the site code you pick at goatcounter.com
+    goatcounter:  "delag",            // ← the site code you pick at goatcounter.com
+
+    // Where the sign-up is POSTed.
+    //   "/"  = Netlify Forms. Works ONLY on a deployed Netlify site — never
+    //          when the file is opened locally, because there is no server.
+    //   Any other host: paste a Formspree endpoint instead, e.g.
+    //          "https://formspree.io/f/xxxxxxxx"
+    formEndpoint: "/"
   };
 </script>
 
@@ -49,7 +56,7 @@
 
   /* --- centre --- */
   main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:clamp(28px,5vh,56px)}
-  .mark{width:min(720px,88vw)}
+  .mark{width:min(760px,90vw)}
   .mark svg{display:block;width:100%;height:auto;overflow:visible}
   .tagline{font-size:clamp(11px,1.5vw,14px);letter-spacing:.36em;text-transform:uppercase;font-weight:600;text-align:center;color:var(--txt)}
   .tagline b{color:var(--amber);font-weight:600}
@@ -71,7 +78,12 @@
   .done svg{width:54px;height:auto}
   .done p{margin:0;color:var(--txt);font-size:12.5px;letter-spacing:.2em;text-transform:uppercase}
   .cta.ok form{display:none}.cta.ok .done{display:flex}
-  .err{display:none;color:var(--amber);font-size:12px;margin-top:10px}
+  .err{display:none;color:var(--amber);font-size:12.5px;line-height:1.6;margin-top:14px;padding:12px 14px;border:1px solid #3A2A14;background:#17130C;text-align:left}
+  .err a{color:var(--amber)}
+  .note{display:none;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-top:4px}
+  .preview .note{display:block}
+  .row button[disabled]{opacity:.55;cursor:default}
+  .cta.failed .alt{display:none}   /* the error box already carries the address */
 
   /* --- bottom --- */
   footer{display:flex;justify-content:space-between;align-items:center;padding:22px 28px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);flex-wrap:wrap;gap:10px}
@@ -109,7 +121,11 @@
     <g transform="translate(110,0)"><rect width="14" height="100"/><rect width="76" height="14"/><rect y="43" width="64" height="14"/><rect y="86" width="76" height="14"/></g>
     <g transform="translate(212,0)"><rect width="14" height="100"/><rect y="86" width="72" height="14"/></g>
     <g transform="translate(310,0)"><polygon points="34,0 48,0 15,100 0,100"/><polygon points="48,0 62,0 96,100 81,100"/><polygon points="25,66 71,66 76,80 20,80"/></g>
-    <g transform="translate(432,0)"><use href="#g"/></g>
+    <!-- G kerned in 11 units (was 432). A's right side is a diagonal that only
+         reaches its full width at the baseline, and G's left side is a curve —
+         so equal sidebearings put the two shapes 37.5 apart at their closest
+         point, against 22–26 for every other pair. 421 brings that to 26.5. -->
+    <g transform="translate(421,0)"><use href="#g"/></g>
   </g>
   <mask id="wm"><rect x="-200" y="-200" width="1200" height="600" fill="#000"/><g fill="#fff"><use href="#letters"/></g></mask>
   <path id="route" d="M-70,29 C 30,26 90,44 149,50 C 200,55 228,93 253,93 C 300,93 332,78 357,73 C 430,60 468,31 512,29 C 550,27 580,28 620,29"/>
@@ -134,7 +150,11 @@
 
 <main>
   <div class="mark" id="mark" title="DELAG">
-    <svg viewBox="-70 -34 700 168" role="img" aria-label="DELAG">
+    <!-- viewBox centred on the wordmark (letters 0–509, centre 254.5), not on
+         the route's bleed — the old -70/700 box hung the mark 20 units left of
+         centre, which showed as ~21px on a 1440 screen. Both edges still clear
+         the wake's fade-in and fade-out, so nothing pops or clips. -->
+    <svg viewBox="-115.5 -34 740 168" role="img" aria-label="DELAG">
       <rect x="-200" y="-200" width="1200" height="600" fill="#E9ECEF" mask="url(#wm)"/>
       <g style="mix-blend-mode:screen">
         <use href="#routeHi" class="one hi" stroke="url(#gradSoft)" stroke-width="17" stroke-dasharray="160 4000" filter="url(#b16)" opacity=".5"/>
@@ -161,7 +181,7 @@
         <input type="email" name="email" id="email" placeholder="your@email" required autocomplete="email" inputmode="email">
         <button type="submit">Notify me</button>
       </div>
-      <div class="err" id="err">Something went wrong — please use the email below instead.</div>
+      <div class="err" id="err" role="alert"></div>
     </form>
 
     <div class="done" aria-live="polite">
@@ -170,6 +190,7 @@
         <g fill="#E9ECEF" transform="translate(88,0) scale(-1,1)"><rect class="cbar" x="56" y="43" width="18" height="14"/></g>
       </svg>
       <p>Registered<b style="color:var(--amber)">.</b></p>
+      <div class="note">Preview only — nothing was sent</div>
     </div>
 
     <div class="alt">or write to <a id="mail" href="#">…</a></div>
@@ -212,14 +233,45 @@
   mark.addEventListener('mouseenter',runWake);
   mark.addEventListener('click',runWake);
 
-  // sign-up
-  var form=document.querySelector('form'),cta=document.getElementById('contact'),err=document.getElementById('err');
+  // --- sign-up -------------------------------------------------------------
+  // The form posts to a server. Opened as a local file there is no server, so
+  // the POST can only fail — that is expected, not a broken button. In that
+  // case we run the flow in preview mode so the states can still be checked,
+  // and label it clearly so a preview is never mistaken for a live sign-up.
+  var form=document.querySelector('form'),
+      cta=document.getElementById('contact'),
+      err=document.getElementById('err'),
+      btn=form.querySelector('button'),
+      live=(location.protocol==='http:'||location.protocol==='https:');
+
+  function fail(msg){
+    err.innerHTML=msg+' Please write to <a href="mailto:'+C.contactEmail+'?subject=DELAG">'+C.contactEmail+'</a> instead.';
+    err.style.display='block'; cta.classList.add('failed');
+    btn.disabled=false; btn.textContent='Notify me';
+  }
+
   form.addEventListener('submit',function(e){
-    e.preventDefault(); err.style.display='none';
+    e.preventDefault();
+    err.style.display='none'; cta.classList.remove('failed');
+
+    if(!live){                                   // opened from disk — preview
+      cta.classList.add('ok','preview');
+      return;
+    }
+
+    btn.disabled=true; btn.textContent='Sending';
     var body=new URLSearchParams(new FormData(form)).toString();
-    fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body})
-      .then(function(r){ if(!r.ok) throw new Error(r.status); cta.classList.add('ok'); track('signup'); })
-      .catch(function(){ err.style.display='block'; track('signup_error'); });
+    fetch(C.formEndpoint,{method:'POST',
+        headers:{'Content-Type':'application/x-www-form-urlencoded','Accept':'application/json'},
+        body:body})
+      .then(function(r){
+        if(!r.ok) throw new Error(r.status);
+        cta.classList.add('ok'); track('signup');
+      })
+      .catch(function(){
+        fail('We could not register that address.');
+        track('signup_error');
+      });
   });
 
   function track(name){
