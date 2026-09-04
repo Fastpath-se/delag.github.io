@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DELAG — Same workload. Better execution.</title>
+<meta name="description" content="DELAG removes what slows your models down. Same workload, better execution. Full site launching 1 October 2026.">
+<meta property="og:title" content="DELAG">
+<meta property="og:description" content="Same workload. Better execution. Full site launching 1 October 2026.">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#0A0B0D">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-6 -6 100 112'%3E%3Crect x='-6' y='-6' width='100' height='112' fill='%230A0B0D'/%3E%3Cpath fill='%23E9ECEF' transform='translate(88,0) scale(-1,1)' d='M88,0 H40 C13,0 0,18 0,50 C0,82 13,100 40,100 H88 V43 H56 V57 H74 V86 H40 C22,86 14,72 14,50 C14,28 22,14 40,14 H88 Z'/%3E%3C/svg%3E">
+
+<!-- ============================================================
+     CONFIG — the only two things to change before going live
+     ============================================================ -->
+<script>
+  window.DELAG_CONFIG = {
+    contactEmail: "hello@delag.com",  // ← your real inbox
+    goatcounter:  "delag"             // ← the site code you pick at goatcounter.com
+  };
+</script>
+
+<!-- GoatCounter · cookieless, no consent banner needed. ~1 KB.
+     Counts page views + the events fired below (signup, contact_click). -->
+<script>
+  (function(){
+    var s=document.createElement('script');
+    s.async=true; s.src='https://gc.zgo.at/count.js';
+    s.setAttribute('data-goatcounter','https://'+window.DELAG_CONFIG.goatcounter+'.goatcounter.com/count');
+    document.head.appendChild(s);
+  })();
+</script>
+
+<style>
+  :root{--bg:#0A0B0D;--panel:#10131A;--line:#1E232C;--txt:#E9ECEF;--grey:#8B939E;--dim:#5A6270;--cyan:#33E0FF;--amber:#FFA028}
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--txt);font-family:"Inter","Segoe UI",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;
+       display:flex;flex-direction:column;min-height:100vh;min-height:100dvh}
+  a{color:inherit}
+
+  /* --- top: flagged menu, not clickable --- */
+  nav{display:flex;justify-content:center;gap:clamp(18px,4vw,44px);padding:26px 24px;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--dim);flex-wrap:wrap}
+  nav span{cursor:default}
+  nav a{color:var(--txt);text-decoration:none;position:relative}
+  nav a::after{content:"";position:absolute;left:0;right:0;bottom:-6px;height:1px;background:var(--amber);transform:scaleX(0);transform-origin:left;transition:transform .35s cubic-bezier(.5,0,.5,1)}
+  nav a:hover::after{transform:scaleX(1)}
+
+  /* --- centre --- */
+  main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:clamp(28px,5vh,56px)}
+  .mark{width:min(720px,88vw)}
+  .mark svg{display:block;width:100%;height:auto;overflow:visible}
+  .tagline{font-size:clamp(11px,1.5vw,14px);letter-spacing:.36em;text-transform:uppercase;font-weight:600;text-align:center;color:var(--txt)}
+  .tagline b{color:var(--amber);font-weight:600}
+
+  /* --- form --- */
+  .cta{width:min(460px,100%);text-align:center}
+  .cta p{font-size:12.5px;color:var(--grey);line-height:1.7;margin-bottom:16px}
+  .row{display:flex;gap:0;border:1px solid var(--line);background:var(--panel)}
+  .row input{flex:1;min-width:0;background:transparent;border:0;outline:0;color:var(--txt);font:inherit;font-size:14px;padding:14px 16px;letter-spacing:.02em}
+  .row input::placeholder{color:var(--dim)}
+  .row button{background:var(--txt);color:var(--bg);border:0;font:inherit;font-size:11px;letter-spacing:.26em;text-transform:uppercase;font-weight:600;padding:0 20px;cursor:pointer;transition:background .2s}
+  .row button:hover{background:#fff}
+  .row:focus-within{border-color:#2A3A44}
+  .alt{font-size:11.5px;color:var(--dim);margin-top:14px;letter-spacing:.04em}
+  .alt a{color:var(--grey);text-decoration:none;border-bottom:1px solid var(--line)}
+  .alt a:hover{color:var(--txt);border-color:var(--amber)}
+  .hp{position:absolute;left:-9999px;opacity:0;height:0;overflow:hidden}
+  .done{display:none;flex-direction:column;align-items:center;gap:14px}
+  .done svg{width:54px;height:auto}
+  .done p{margin:0;color:var(--txt);font-size:12.5px;letter-spacing:.2em;text-transform:uppercase}
+  .cta.ok form{display:none}.cta.ok .done{display:flex}
+  .err{display:none;color:var(--amber);font-size:12px;margin-top:10px}
+
+  /* --- bottom --- */
+  footer{display:flex;justify-content:space-between;align-items:center;padding:22px 28px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);flex-wrap:wrap;gap:10px}
+  footer .launch b{color:var(--grey);font-weight:600}
+
+  /* ===== THE WAKE · variant 03 "Slør — foran", one clean pass =====
+     Route length ≈ 710. Dash period 4160, offset travels 2300, so exactly one
+     band crosses the word per run and nothing is on the path at either end.
+     Runs once on load (iteration-count 1), again on hover — never loops. */
+  @keyframes one3{from{stroke-dashoffset:1000}to{stroke-dashoffset:-1300}}
+  @keyframes one3hi{from{stroke-dashoffset:1070}to{stroke-dashoffset:-1230}}
+  @keyframes one3lo{from{stroke-dashoffset:940}to{stroke-dashoffset:-1360}}
+  .one{fill:none;stroke-linecap:round;stroke-dashoffset:1000}
+  .one.hi{stroke-dashoffset:1070}.one.lo{stroke-dashoffset:940}
+  .run .one{animation:one3 7s cubic-bezier(.5,0,.5,1) 1 forwards}
+  .run .one.hi{animation-name:one3hi}
+  .run .one.lo{animation-name:one3lo}
+
+  /* crossbar search — the brand's loader, used on the success state */
+  .cbar{transform-box:fill-box;transform-origin:right center;animation:probe 2.2s cubic-bezier(.45,0,.3,1) 1 forwards}
+  @keyframes probe{0%{transform:scaleX(0)}14%{transform:scaleX(.42)}26%{transform:scaleX(.08)}
+                   42%{transform:scaleX(.68)}54%{transform:scaleX(.22)}74%{transform:scaleX(1)}100%{transform:scaleX(1)}}
+
+  @media (prefers-reduced-motion:reduce){.run .one,.cbar{animation:none}.cbar{transform:none}}
+  @media (max-width:520px){nav{gap:14px;font-size:10px}.tagline{font-size:10.5px;letter-spacing:.2em}.row button{padding:0 14px}footer{justify-content:center;text-align:center}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <path id="g-nobar" d="M88,0 H40 C13,0 0,18 0,50 C0,82 13,100 40,100 H88 V43 H74 V86 H40 C22,86 14,72 14,50 C14,28 22,14 40,14 H88 Z"/>
+  <path id="g" d="M88,0 H40 C13,0 0,18 0,50 C0,82 13,100 40,100 H88 V43 H56 V57 H74 V86 H40 C22,86 14,72 14,50 C14,28 22,14 40,14 H88 Z"/>
+  <g id="letters">
+    <g transform="translate(88,0) scale(-1,1)"><use href="#g"/></g>
+    <g transform="translate(110,0)"><rect width="14" height="100"/><rect width="76" height="14"/><rect y="43" width="64" height="14"/><rect y="86" width="76" height="14"/></g>
+    <g transform="translate(212,0)"><rect width="14" height="100"/><rect y="86" width="72" height="14"/></g>
+    <g transform="translate(310,0)"><polygon points="34,0 48,0 15,100 0,100"/><polygon points="48,0 62,0 96,100 81,100"/><polygon points="25,66 71,66 76,80 20,80"/></g>
+    <g transform="translate(432,0)"><use href="#g"/></g>
+  </g>
+  <mask id="wm"><rect x="-200" y="-200" width="1200" height="600" fill="#000"/><g fill="#fff"><use href="#letters"/></g></mask>
+  <path id="route" d="M-70,29 C 30,26 90,44 149,50 C 200,55 228,93 253,93 C 300,93 332,78 357,73 C 430,60 468,31 512,29 C 550,27 580,28 620,29"/>
+  <path id="routeHi" d="M-70,17 C 30,16 92,32 149,38 C 200,44 226,80 253,80 C 302,80 334,66 357,61 C 430,49 468,20 512,18 C 550,16 580,17 620,18"/>
+  <path id="routeLo" d="M-70,41 C 30,37 88,56 149,62 C 200,67 230,105 253,105 C 298,105 328,90 357,85 C 430,72 468,43 512,41 C 550,39 580,40 620,41"/>
+  <linearGradient id="grad" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#33E0FF" stop-opacity="0"/><stop offset="18%" stop-color="#33E0FF"/>
+    <stop offset="52%" stop-color="#EDEDE6"/><stop offset="86%" stop-color="#FFA028"/><stop offset="1" stop-color="#FFA028" stop-opacity="0"/>
+  </linearGradient>
+  <linearGradient id="gradSoft" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#33E0FF" stop-opacity="0"/><stop offset="25%" stop-color="#33E0FF" stop-opacity=".8"/>
+    <stop offset="55%" stop-color="#BFE9F0" stop-opacity=".7"/><stop offset="85%" stop-color="#FFA028" stop-opacity=".8"/><stop offset="1" stop-color="#FFA028" stop-opacity="0"/>
+  </linearGradient>
+  <filter id="b5" x="-40%" y="-120%" width="180%" height="340%"><feGaussianBlur stdDeviation="5"/></filter>
+  <filter id="b9" x="-40%" y="-160%" width="180%" height="420%"><feGaussianBlur stdDeviation="9"/></filter>
+  <filter id="b16" x="-60%" y="-200%" width="220%" height="500%"><feGaussianBlur stdDeviation="16"/></filter>
+</defs></svg>
+
+<nav aria-label="Coming soon">
+  <span>Fields</span><span>Technology</span><span>Proof</span><span>Company</span><a href="#contact">Contact</a>
+</nav>
+
+<main>
+  <div class="mark" id="mark" title="DELAG">
+    <svg viewBox="-70 -34 700 168" role="img" aria-label="DELAG">
+      <rect x="-200" y="-200" width="1200" height="600" fill="#E9ECEF" mask="url(#wm)"/>
+      <g style="mix-blend-mode:screen">
+        <use href="#routeHi" class="one hi" stroke="url(#gradSoft)" stroke-width="17" stroke-dasharray="160 4000" filter="url(#b16)" opacity=".5"/>
+        <use href="#routeLo" class="one lo" stroke="url(#gradSoft)" stroke-width="14" stroke-dasharray="140 4000" filter="url(#b9)" opacity=".45"/>
+        <use href="#route" class="one" stroke="url(#grad)" stroke-width="7" stroke-dasharray="120 4000" filter="url(#b5)" opacity=".6"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="tagline">Same workload<b>.</b> Better execution<b>.</b></div>
+
+  <div class="cta" id="contact">
+    <p>The full site opens 1 October 2026.<br>Leave your address and we will write to you once, when it does.</p>
+
+    <!-- Netlify Forms: the attributes below make Netlify collect submissions
+         at deploy time. Submissions appear under Forms in the Netlify dashboard;
+         turn on email notifications there. -->
+    <form name="interest" method="POST" data-netlify="true" data-netlify-honeypot="company" action="/">
+      <input type="hidden" name="form-name" value="interest">
+      <input type="hidden" name="ref" id="ref" value="">
+      <input type="hidden" name="referrer" id="referrer" value="">
+      <label class="hp">Company <input name="company" tabindex="-1" autocomplete="off"></label>
+      <div class="row">
+        <input type="email" name="email" id="email" placeholder="your@email" required autocomplete="email" inputmode="email">
+        <button type="submit">Notify me</button>
+      </div>
+      <div class="err" id="err">Something went wrong — please use the email below instead.</div>
+    </form>
+
+    <div class="done" aria-live="polite">
+      <svg viewBox="-16 -18 120 136" aria-hidden="true">
+        <g fill="#E9ECEF"><g transform="translate(88,0) scale(-1,1)"><use href="#g-nobar"/></g></g>
+        <g fill="#E9ECEF" transform="translate(88,0) scale(-1,1)"><rect class="cbar" x="56" y="43" width="18" height="14"/></g>
+      </svg>
+      <p>Registered<b style="color:var(--amber)">.</b></p>
+    </div>
+
+    <div class="alt">or write to <a id="mail" href="#">…</a></div>
+  </div>
+</main>
+
+<footer>
+  <span>© 2026 DELAG</span>
+  <span class="launch">Full site <b>1 October 2026</b></span>
+  <span>Malmö</span>
+</footer>
+
+<script>
+(function(){
+  var C=window.DELAG_CONFIG;
+
+  // contact link
+  var mail=document.getElementById('mail');
+  mail.href='mailto:'+C.contactEmail+'?subject=DELAG';
+  mail.textContent=C.contactEmail;
+  mail.addEventListener('click',function(){track('contact_click')});
+
+  // where did they come from?  share links as  delag.io/?ref=linkedin  etc.
+  var q=new URLSearchParams(location.search);
+  document.getElementById('ref').value=q.get('ref')||q.get('utm_source')||'';
+  document.getElementById('referrer').value=document.referrer||'';
+
+  // the wake: on load, then every 10s (7s pass + 3s of rest), and on hover.
+  // The guard means a hover mid-pass is ignored rather than restarting it, and
+  // the interval is skipped while the tab is hidden — a wake nobody sees is
+  // just a timer that would fire the moment they come back.
+  var mark=document.getElementById('mark');
+  function runWake(){
+    if(mark.classList.contains('run')) return;
+    mark.classList.add('run');
+    setTimeout(function(){mark.classList.remove('run')},7200);
+  }
+  setTimeout(runWake,400);
+  setInterval(function(){ if(!document.hidden) runWake(); },10000);
+  mark.addEventListener('mouseenter',runWake);
+  mark.addEventListener('click',runWake);
+
+  // sign-up
+  var form=document.querySelector('form'),cta=document.getElementById('contact'),err=document.getElementById('err');
+  form.addEventListener('submit',function(e){
+    e.preventDefault(); err.style.display='none';
+    var body=new URLSearchParams(new FormData(form)).toString();
+    fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:body})
+      .then(function(r){ if(!r.ok) throw new Error(r.status); cta.classList.add('ok'); track('signup'); })
+      .catch(function(){ err.style.display='block'; track('signup_error'); });
+  });
+
+  function track(name){
+    if(window.goatcounter&&window.goatcounter.count){ window.goatcounter.count({path:name,title:name,event:true}); }
+  }
+})();
+</script>
+</body>
+</html>
