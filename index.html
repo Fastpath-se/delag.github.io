@@ -19,12 +19,7 @@
     contactEmail: "hello@delag.com",  // ← your real inbox
     goatcounter:  "delag",            // ← the site code you pick at goatcounter.com
 
-    // Where the sign-up is POSTed.
-    //   "/"  = Netlify Forms. Works ONLY on a deployed Netlify site — never
-    //          when the file is opened locally, because there is no server.
-    //   Any other host: paste a Formspree endpoint instead, e.g.
-    //          "https://formspree.io/f/xxxxxxxx"
-    formEndpoint: "/"
+    formEndpoint: "https://api-eu1.hsforms.com/submissions/v3/integration/submit/149264331/ef1bf124-4730-4775-ba7b-96b365226bfa"
   };
 </script>
 
@@ -239,10 +234,10 @@
   // case we run the flow in preview mode so the states can still be checked,
   // and label it clearly so a preview is never mistaken for a live sign-up.
   var form=document.querySelector('form'),
+      email=document.getElementById('email'),
       cta=document.getElementById('contact'),
       err=document.getElementById('err'),
-      btn=form.querySelector('button'),
-      live=(location.protocol==='http:'||location.protocol==='https:');
+      btn=form.querySelector('button');
 
   function fail(msg){
     err.innerHTML=msg+' Please write to <a href="mailto:'+C.contactEmail+'?subject=DELAG">'+C.contactEmail+'</a> instead.';
@@ -254,16 +249,14 @@
     e.preventDefault();
     err.style.display='none'; cta.classList.remove('failed');
 
-    if(!live){                                   // opened from disk — preview
-      cta.classList.add('ok','preview');
-      return;
-    }
-
     btn.disabled=true; btn.textContent='Sending';
-    var body=new URLSearchParams(new FormData(form)).toString();
+    var body=JSON.stringify({
+          fields: [{ objectTypeId: "0-1", name: "email", value: email.value }]
+          });
     fetch(C.formEndpoint,{method:'POST',
-        headers:{'Content-Type':'application/x-www-form-urlencoded','Accept':'application/json'},
-        body:body})
+        headers:{'Content-Type': 'application/json' },
+        body:body
+      })
       .then(function(r){
         if(!r.ok) throw new Error(r.status);
         cta.classList.add('ok'); track('signup');
